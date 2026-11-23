@@ -1,11 +1,15 @@
-version: '3.1'
 services:
-  springboot:
-    image: dockerhandson/maven-web-app:VERSION
-    restart: always
+  maven:
+    image: mavenwebapp:v1
+    container_name: maven-compose
     ports:
-    - 9090:8080
-    networks:
-    - mavenappbridge
-networks:
-  mavenappbridge:
+      - "8081:8080"
+    restart: unless-stopped
+
+  myapp:
+    image: myapp:v1
+    container_name: myapp-compose
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
