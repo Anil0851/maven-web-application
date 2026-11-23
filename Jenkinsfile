@@ -6,8 +6,7 @@ pipeline {
 
         stage('Git Checkout') {
             steps {
-                git branch: 'master',
-                    url: 'https://github.com/prasads1283/maven-web-application.git'
+                echo 'Checking out source code'
             }
         }
 
@@ -19,16 +18,20 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t mavenwebapp:v1 .'
+                sh 'docker build -t mavenwebapp:jenkins .'
             }
         }
 
         stage('Docker Deploy') {
             steps {
                 sh '''
-                docker stop maven || true
-                docker rm maven || true
-                docker run -d --name maven -p 8081:8080 mavenwebapp:v1
+                docker stop jenkins-maven || true
+                docker rm jenkins-maven || true
+
+                docker run -d \
+                  --name jenkins-maven \
+                  -p 8084:8080 \
+                  mavenwebapp:jenkins
                 '''
             }
         }
@@ -38,9 +41,8 @@ pipeline {
         success {
             echo 'Application deployed successfully!'
         }
-
         failure {
-            echo 'Pipeline failed. Check Jenkins console output.'
+            echo 'Pipeline failed. Check Console Output.'
         }
     }
 }
