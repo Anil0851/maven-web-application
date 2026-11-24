@@ -1,48 +1,60 @@
 
+
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = 'mavenwebapp'
+        CONTAINER_NAME = 'maven'
+        HOST_PORT = '8081'
+    }
+
     stages {
 
-        stage('Git Checkout') {
+        stage('Checkout') {
             steps {
-                echo 'Checking out source code'
+                git branch: 'master',
+                    url: 'https://github.com/prasads1283/maven-web-application.git'
             }
         }
 
-        stage('Maven Build') {
+        stage('Build with Maven') {
             steps {
                 sh 'mvn clean package'
             }
         }
 
-        stage('Docker Build') {
+        stage('Verify WAR') {
             steps {
-                sh 'docker build -t mavenwebapp:jenkins .'
+                sh 'ls -lh target/*.war'
             }
         }
 
-        stage('Docker Deploy') {
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t mavenwebapp:latest .'
+            }
+        }
+
+        stage('Deploy Container') {
             steps {
                 sh '''
-                docker stop jenkins-maven || true
-                docker rm jenkins-maven || true
+                    docker rm -f maven || true
 
-                docker run -d \
-                  --name jenkins-maven \
-                  -p 8084:8080 \
-                  mavenwebapp:jenkins
+                    docker run -d \
+                      --name maven \
+                      --restart unless-stopped \
+                      -p 8081:8080 \
+                      mavenwebapp:latest
                 '''
             }
         }
-    }
 
-    post {
-        success {
-            echo 'Application deployed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check Console Output.'
+        stage('Verify Deployment') {
+            steps {
+                sh 'docker ps'
+                sh 'curl -f http://localhost:8084/'
+            }
         }
     }
 }
