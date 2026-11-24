@@ -53,7 +53,7 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh 'docker ps'
-                sh 'curl -f http://localhost:8084/'
+                sh 'curl -f http://localhost:8081/'
             }
         }
     }
